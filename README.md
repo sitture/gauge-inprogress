@@ -40,3 +40,20 @@ Add `inprogress` to your project's `manifest.json`.
   ]
 }
 ```
+
+## Building locally
+
+```bash
+go run build/make.go
+go run build/make.go --install
+```
+
+## :wave: Issues & Contributions
+
+Please [open an issue here](../../issues) on GitHub if you have a problem, suggestion, or other comments.
+
+Pull requests are welcome and encouraged! Any contributions should include new or updated tests as necessary to maintain thorough test coverage.
+
+## :scroll: License
+
+This work is licensed under the terms of [GNU Public License version 3.0](http://www.gnu.org/licenses/gpl-3.0.txt)

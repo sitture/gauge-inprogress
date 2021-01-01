@@ -1,0 +1,24 @@
+{
+  "id" : "inprogress",
+  "version" : "0.1.0",
+  "name" : "In-progress",
+  "description" : "Plugin for tracking in-progress specs/scenarios.",
+  "install": {
+    "windows": [],
+    "linux": [],
+    "darwin": []
+  },
+  "command" : {
+    "windows" : ["bin/inprogress"],
+    "linux" : ["bin/inprogress"],
+    "darwin" : ["bin/inprogress"]
+  },
+  "scope" : ["documentation"],
+  "gaugeVersionSupport": {
+    "minimum": "1.0.7",
+    "maximum": ""
+  },
+  "capabilities": [
+    "grpc_support"
+  ]
+}
