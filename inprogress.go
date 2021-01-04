@@ -21,11 +21,11 @@ func main() {
 	os.Chdir(helper.GetProjectRoot())
 	address, err := net.ResolveTCPAddr("tcp", GaugeHost)
 	if err != nil {
-		logger.Fatalf("failed to start server.", err)
+		logger.Fatalf("failed to start server. %s", err.Error())
 	}
 	listener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		logger.Fatalf("failed to start server.", err)
+		logger.Fatalf("failed to start server. %s", err.Error())
 	}
 	server := grpc.NewServer(grpc.MaxRecvMsgSize(msgSize))
 	handler := &handler{server: server}
