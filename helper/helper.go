@@ -140,37 +140,68 @@ func GetScenarios(specs []*gauge_messages.ProtoSpec) []*gauge_messages.ProtoScen
 	return scenarios
 }
 
-func GetInProgressSpecsScenarios(specs []*gauge_messages.ProtoSpec) (
-	inProgressSpecs map[string]*gauge_messages.ProtoSpec,
-	inProgressScenarios map[string]*gauge_messages.ProtoScenario,
-) {
-	inProgressSpecs = make(map[string]*gauge_messages.ProtoSpec, 0)
-	inProgressScenarios = make(map[string]*gauge_messages.ProtoScenario, 0)
-	for _, spec := range specs {
-		if containsInProgressTags(spec.GetTags()) {
-			if _, exists := inProgressSpecs[spec.GetFileName()]; !exists {
-				inProgressSpecs[spec.GetFileName()] = spec
-			}
-			for _, itemType := range spec.GetItems() {
-				scenario := itemType.GetScenario()
-				if scenario != nil {
-					inProgressScenarios[scenario.GetScenarioHeading()] = scenario
-				}
-			}
-		} else {
-			for _, itemType := range spec.GetItems() {
-				scenario := itemType.GetScenario()
-				if scenario != nil && containsInProgressTags(scenario.GetTags()) {
-					inProgressScenarios[scenario.GetScenarioHeading()] = scenario
-					if _, exists := inProgressSpecs[spec.GetFileName()]; !exists {
-						inProgressSpecs[spec.GetFileName()] = spec
-					}
-				}
+type InProgressSpec struct {
+	spec      *gauge_messages.ProtoSpec
+	scenarios []*gauge_messages.ProtoScenario
+}
 
+func (inProgressSpec *InProgressSpec) GetSpec() *gauge_messages.ProtoSpec {
+	return inProgressSpec.spec
+}
+
+func (inProgressSpec *InProgressSpec) GetScenarios() []*gauge_messages.ProtoScenario {
+	return inProgressSpec.scenarios
+}
+
+func getInProgressScenarios(spec *gauge_messages.ProtoSpec, tags []string) []*gauge_messages.ProtoScenario {
+	inProgressScenarios := make([]*gauge_messages.ProtoScenario, 0)
+	if containsInProgressTags(tags) {
+		for _, itemType := range spec.GetItems() {
+			scenario := itemType.GetScenario()
+			if scenario != nil {
+				inProgressScenarios = append(inProgressScenarios, scenario)
 			}
 		}
 	}
-	return
+	return inProgressScenarios
+}
+
+func GetInProgressScenarios(specs map[string]InProgressSpec) []*gauge_messages.ProtoScenario {
+	inProgressScenarios := make([]*gauge_messages.ProtoScenario, 0)
+	for _, spec := range specs {
+		inProgressScenarios = append(inProgressScenarios, spec.GetScenarios()...)
+	}
+	return inProgressScenarios
+}
+
+func GetInProgressSpecs(specs []*gauge_messages.ProtoSpec) map[string]InProgressSpec {
+	inProgressSpecs := make(map[string]InProgressSpec, 0)
+	for _, spec := range specs {
+		specKey := spec.GetSpecHeading()
+		if containsInProgressTags(spec.GetTags()) {
+			if _, exists := inProgressSpecs[specKey]; !exists {
+				inProgressSpec := InProgressSpec{spec: spec, scenarios: getInProgressScenarios(spec, spec.GetTags())}
+				inProgressSpecs[specKey] = inProgressSpec
+			}
+		} else {
+			inProgressScenarios := make([]*gauge_messages.ProtoScenario, 0)
+			if inProgressSpec, exists := inProgressSpecs[specKey]; exists {
+				inProgressScenarios = append(inProgressScenarios, inProgressSpec.scenarios...)
+			}
+			for _, itemType := range spec.GetItems() {
+				scenario := itemType.GetScenario()
+				if scenario != nil && containsInProgressTags(scenario.GetTags()) {
+					inProgressScenarios = append(inProgressScenarios, scenario)
+				}
+			}
+			if len(inProgressScenarios) > 0 {
+				delete(inProgressSpecs, specKey)
+				inProgressSpec := InProgressSpec{spec: spec, scenarios: inProgressScenarios}
+				inProgressSpecs[specKey] = inProgressSpec
+			}
+		}
+	}
+	return inProgressSpecs
 }
 
 func containsInProgressTags(tags []string) bool {

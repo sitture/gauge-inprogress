@@ -7,6 +7,7 @@ import (
 	"github.com/sitture/gauge-inprogress/logger"
 	"google.golang.org/grpc"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -20,9 +21,20 @@ func (h *handler) GenerateDocs(c context.Context, m *gauge_messages.SpecDetails)
 	logger.Debugf("Analysing specs under %s", specDirs)
 	allSpecs := helper.GetSpecs(m, helper.GetSpecFiles(specDirs))
 	allScenarios := helper.GetScenarios(allSpecs)
-	inProgressSpecs, inProgressScenarios := helper.GetInProgressSpecsScenarios(allSpecs)
+	inProgressSpecs := helper.GetInProgressSpecs(allSpecs)
+	inProgressScenarios := helper.GetInProgressScenarios(inProgressSpecs)
+	for _, spec := range inProgressSpecs {
+		logger.Infof(
+			"# %s // %s",
+			spec.GetSpec().GetSpecHeading(),
+			filepath.Base(spec.GetSpec().GetFileName()),
+		)
+		for _, sc := range spec.GetScenarios() {
+			logger.Infof("  ## %s", sc.GetScenarioHeading())
+		}
+	}
 	logger.Infof(
-		"In progress Summary: %s\n",
+		"\nIn progress Summary: %s\n",
 		helper.GetProjectDirName(),
 	)
 	if helper.PercentOf(len(inProgressSpecs), len(allSpecs)) == 0 && helper.PercentOf(len(inProgressScenarios), len(allScenarios)) == 0 {
