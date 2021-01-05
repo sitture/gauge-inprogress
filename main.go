@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/sitture/gauge-inprogress/gauge_messages"
-	"github.com/sitture/gauge-inprogress/helper"
+	"github.com/sitture/gauge-inprogress/inprogress"
 	"github.com/sitture/gauge-inprogress/logger"
 	"google.golang.org/grpc"
 	"net"
@@ -18,7 +18,7 @@ const (
 )
 
 func main() {
-	os.Chdir(helper.GetProjectRoot())
+	os.Chdir(inprogress.GetProjectRoot())
 	address, err := net.ResolveTCPAddr("tcp", GaugeHost)
 	if err != nil {
 		logger.Fatalf("failed to start server. %s", err.Error())

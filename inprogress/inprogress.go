@@ -1,18 +1,24 @@
-package helper
+package inprogress
 
 import (
+	"fmt"
 	"github.com/getgauge/common"
 	"github.com/sitture/gauge-inprogress/gauge_messages"
 	"github.com/sitture/gauge-inprogress/logger"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 const (
-	EnvFileExtensions = "gauge_spec_file_extensions"
-	EnvInProgressTags = "IN_PROGRESS_TAGS"
+	EnvFileExtensions       = "gauge_spec_file_extensions"
+	EnvGaugeSpecDirs        = "GAUGE_SPEC_DIRS"
+	EnvInProgressTags       = "IN_PROGRESS_TAGS"
+	EnvInProgressConsoleOut = "IN_PROGRESS_CONSOLE_OUTPUT"
+	reportDirectory         = "reports"
+	reportFile              = "inprogress.md"
 )
 
 func GetProjectRoot() string {
@@ -37,6 +43,18 @@ var GetInProgressTags = func() []string {
 		}
 	}
 	return inProgressTags
+}
+
+var GetSpecDirs = func() []string {
+	return strings.Split(strings.TrimSpace(os.Getenv(EnvGaugeSpecDirs)), "||")
+}
+
+var OutPutScenariosToConsole = func() bool {
+	value := os.Getenv(EnvInProgressConsoleOut)
+	if value == "true" {
+		return true
+	}
+	return false
 }
 
 // findFilesIn Finds all the files in the directory of a given extension
@@ -153,7 +171,7 @@ func (inProgressSpec *InProgressSpec) GetScenarios() []*gauge_messages.ProtoScen
 	return inProgressSpec.scenarios
 }
 
-func getInProgressScenarios(spec *gauge_messages.ProtoSpec, tags []string) []*gauge_messages.ProtoScenario {
+func getInProgressScenariosBySpec(spec *gauge_messages.ProtoSpec, tags []string) []*gauge_messages.ProtoScenario {
 	inProgressScenarios := make([]*gauge_messages.ProtoScenario, 0)
 	if containsInProgressTags(tags) {
 		for _, itemType := range spec.GetItems() {
@@ -180,7 +198,7 @@ func GetInProgressSpecs(specs []*gauge_messages.ProtoSpec) map[string]InProgress
 		specKey := spec.GetSpecHeading()
 		if containsInProgressTags(spec.GetTags()) {
 			if _, exists := inProgressSpecs[specKey]; !exists {
-				inProgressSpec := InProgressSpec{spec: spec, scenarios: getInProgressScenarios(spec, spec.GetTags())}
+				inProgressSpec := InProgressSpec{spec: spec, scenarios: getInProgressScenariosBySpec(spec, spec.GetTags())}
 				inProgressSpecs[specKey] = inProgressSpec
 			}
 		} else {
@@ -202,6 +220,104 @@ func GetInProgressSpecs(specs []*gauge_messages.ProtoSpec) map[string]InProgress
 		}
 	}
 	return inProgressSpecs
+}
+
+func GetInProgressSpecsWithReason(specs map[string]InProgressSpec) map[string]InProgressSpec {
+	inProgressSpecs := make(map[string]InProgressSpec, 0)
+	for specKey, spec := range specs {
+		for _, specItem := range spec.GetSpec().GetItems() {
+			if specItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(specItem.GetComment().GetText()) {
+				if _, exists := inProgressSpecs[specKey]; !exists {
+					inProgressSpec := InProgressSpec{spec: spec.GetSpec(), scenarios: spec.GetScenarios()}
+					inProgressSpecs[specKey] = inProgressSpec
+				}
+			}
+		}
+		for _, scenario := range spec.GetScenarios() {
+			for _, scenItem := range scenario.GetScenarioItems() {
+				if scenItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(scenItem.GetComment().GetText()) {
+					if _, exists := inProgressSpecs[specKey]; !exists {
+						inProgressSpec := InProgressSpec{spec: spec.GetSpec(), scenarios: spec.GetScenarios()}
+						inProgressSpecs[specKey] = inProgressSpec
+					}
+				}
+			}
+		}
+	}
+	return inProgressSpecs
+}
+
+type ScenarioWithReason struct {
+	Scenario *gauge_messages.ProtoScenario
+	Reason   string
+}
+
+func GetInProgressScenariosWithReason(specs map[string]InProgressSpec) map[string]ScenarioWithReason {
+	inProgressScenarios := make(map[string]ScenarioWithReason, 0)
+	for _, spec := range specs {
+		if containsInProgressTags(spec.GetSpec().GetTags()) {
+			for _, specItem := range spec.GetSpec().GetItems() {
+				if specItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(specItem.GetComment().GetText()) {
+					for _, scenario := range spec.GetScenarios() {
+						key := scenario.GetScenarioHeading()
+						inProgressScenarios[key] = ScenarioWithReason{scenario, specItem.GetComment().GetText()}
+					}
+				}
+			}
+		} else {
+			for _, scenario := range spec.GetScenarios() {
+				key := scenario.GetScenarioHeading()
+				for _, scenItem := range scenario.GetScenarioItems() {
+					if scenItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(scenItem.GetComment().GetText()) {
+						inProgressScenarios[key] = ScenarioWithReason{scenario, scenItem.GetComment().GetText()}
+					}
+				}
+			}
+		}
+	}
+	return inProgressScenarios
+}
+
+var GetReportPath = func() string {
+	return path.Join(GetProjectRoot(), reportDirectory, reportFile)
+}
+
+func WriteToFile(inProgressSpecs map[string]InProgressSpec, inProgressScenariosWithReason map[string]ScenarioWithReason) (error error) {
+	console := OutPutScenariosToConsole()
+	file, err := os.Create(GetReportPath())
+	if err != nil {
+		logger.Fatalf("Unable to create data.js file")
+	}
+	for _, spec := range inProgressSpecs {
+		specLine := fmt.Sprintf("# %s // %s", spec.GetSpec().GetSpecHeading(),
+			filepath.Base(spec.GetSpec().GetFileName()))
+		_, error = file.WriteString(specLine + "\n")
+		if console {
+			logger.Infof(specLine)
+		}
+		for _, scenario := range spec.GetScenarios() {
+			scenarioLine := fmt.Sprintf("  ## %s", scenario.GetScenarioHeading())
+			_, error = file.WriteString(scenarioLine + "\n")
+			if console {
+				logger.Infof(scenarioLine)
+			}
+			inProgressReason := inProgressScenariosWithReason[scenario.GetScenarioHeading()].Reason
+			if len(strings.TrimSpace(inProgressReason)) > 0 {
+				reasonLine := fmt.Sprintf("    - %s", inProgressReason)
+				_, error = file.WriteString(reasonLine + "\n")
+				if console {
+					logger.Infof(reasonLine)
+				}
+			}
+		}
+	}
+	error = file.Close()
+	return
+}
+
+func containsInProgressPrefix(comment string) bool {
+	var inProgressRegex = regexp.MustCompile(`^in.?progress|//.*in.?progress`)
+	return inProgressRegex.MatchString(strings.ToLower(strings.TrimSpace(comment)))
 }
 
 func containsInProgressTags(tags []string) bool {

@@ -3,12 +3,9 @@ package main
 import (
 	"context"
 	"github.com/sitture/gauge-inprogress/gauge_messages"
-	"github.com/sitture/gauge-inprogress/helper"
+	"github.com/sitture/gauge-inprogress/inprogress"
 	"github.com/sitture/gauge-inprogress/logger"
 	"google.golang.org/grpc"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type handler struct {
@@ -16,44 +13,61 @@ type handler struct {
 }
 
 func (h *handler) GenerateDocs(c context.Context, m *gauge_messages.SpecDetails) (*gauge_messages.Empty, error) {
-	logger.Debugf("\n\nIn progress tags are set to %s.", helper.GetInProgressTags())
-	specDirs := strings.Split(strings.TrimSpace(os.Getenv("GAUGE_SPEC_DIRS")), "||")
+	logger.Debugf("In progress tags are set to %s.", inprogress.GetInProgressTags())
+	specDirs := inprogress.GetSpecDirs()
 	logger.Debugf("Analysing specs under %s", specDirs)
-	allSpecs := helper.GetSpecs(m, helper.GetSpecFiles(specDirs))
-	allScenarios := helper.GetScenarios(allSpecs)
-	inProgressSpecs := helper.GetInProgressSpecs(allSpecs)
-	inProgressScenarios := helper.GetInProgressScenarios(inProgressSpecs)
-	for _, spec := range inProgressSpecs {
-		logger.Infof(
-			"# %s // %s",
-			spec.GetSpec().GetSpecHeading(),
-			filepath.Base(spec.GetSpec().GetFileName()),
-		)
-		for _, sc := range spec.GetScenarios() {
-			logger.Infof("  ## %s", sc.GetScenarioHeading())
-		}
+	allSpecs := inprogress.GetSpecs(m, inprogress.GetSpecFiles(specDirs))
+	allScenarios := inprogress.GetScenarios(allSpecs)
+	inProgressSpecs := inprogress.GetInProgressSpecs(allSpecs)
+	inProgressScenarios := inprogress.GetInProgressScenarios(inProgressSpecs)
+	inProgressSpecsWithReason := inprogress.GetInProgressSpecsWithReason(inProgressSpecs)
+	inProgressScenariosWithReason := inprogress.GetInProgressScenariosWithReason(inProgressSpecsWithReason)
+
+	if err := inprogress.WriteToFile(inProgressSpecs, inProgressScenariosWithReason); err != nil {
+		logger.Debugf("Could not generate the inprogress report file.")
 	}
+
 	logger.Infof(
 		"\nIn progress Summary: %s\n",
-		helper.GetProjectDirName(),
+		inprogress.GetProjectDirName(),
 	)
-	if helper.PercentOf(len(inProgressSpecs), len(allSpecs)) == 0 && helper.PercentOf(len(inProgressScenarios), len(allScenarios)) == 0 {
+	if inprogress.PercentOf(len(inProgressSpecs), len(allSpecs)) == 0 && inprogress.PercentOf(len(inProgressScenarios), len(allScenarios)) == 0 {
 		logger.Infof("No in progress scenarios found.")
 	} else {
 		logger.Infof(
-			"Specifications:\t%d of %d\t%0.0f%%",
+			"Specifications: %d/%d (%0.0f%%)",
 			len(inProgressSpecs),
 			len(allSpecs),
-			helper.PercentOf(len(inProgressSpecs), len(allSpecs)),
+			inprogress.PercentOf(len(inProgressSpecs), len(allSpecs)),
 		)
+		specsWithoutReason := len(inProgressSpecs) - len(inProgressSpecsWithReason)
+		if specsWithoutReason > 0 {
+			logger.Infof(
+				"  - No inprogress comments: %d/%d (%0.0f%%)",
+				specsWithoutReason,
+				len(inProgressSpecs),
+				inprogress.PercentOf(specsWithoutReason, len(inProgressSpecs)),
+			)
+		}
 		logger.Infof(
-			"Scenarios:\t%d of %d\t%0.0f%%",
+			"Scenarios: %d/%d (%0.0f%%)",
 			len(inProgressScenarios),
 			len(allScenarios),
-			helper.PercentOf(len(inProgressScenarios), len(allScenarios)),
+			inprogress.PercentOf(len(inProgressScenarios), len(allScenarios)),
 		)
+		scenariosWithoutReason := len(inProgressScenarios) - len(inProgressScenariosWithReason)
+		if scenariosWithoutReason > 0 {
+			logger.Infof(
+				"  - No inprogress comments: %d/%d (%0.0f%%)",
+				scenariosWithoutReason,
+				len(inProgressScenarios),
+				inprogress.PercentOf(scenariosWithoutReason, len(inProgressScenarios)),
+			)
+		}
+
 	}
 	logger.Infof("")
+	logger.Infof("Successfully generated inprogress report to => %s\n", inprogress.GetReportPath())
 	return &gauge_messages.Empty{}, nil
 }
 

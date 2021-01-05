@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/sitture/gauge-inprogress
+    steps:
+      - checkout
+      - run:
+          name: Get all dependencies
+          command: go get ./...
+      - run:
+          name: Run Tests
+          command: go test ./... -cover
+      - run:
+          name: Make Binaries
+          command: go run build/make.go --all-platforms
+  deploy:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/sitture/gauge-inprogress
+    steps:
+      - checkout
+      - run:
+          name: Get all dependencies
+          command: go get ./...
+      - run:
+          name: Install github-release
+          command: go get -v -u github.com/aktau/github-release
+      - run:
+          name: Build and Release
+          command: .circleci/release.sh
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
