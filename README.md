@@ -2,6 +2,8 @@
 
 A Gauge plugin to keep track of specs/scenarios that are marked with work in progress (wip) tags.
 
+![gauge-inprogress](screenshot.png "Gauge InProgress")
+
 The aim of this plugin is to make sure that any specs or scenarios tagged with in-progress or wip tags are trackable.
 And all scenarios marked as `in-progress` tags are followed by a reason so that it's easy to revisit these accordingly.
 
