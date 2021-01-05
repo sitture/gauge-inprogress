@@ -29,17 +29,28 @@ gauge install inprogress --file inprogress-${version}.zip
 
 ### Using the plugin
 
-Add `inprogress` to your project's `manifest.json`.
+Change to to your project's root directory.
 
-```json
-{
-  "Language": "java",
-  "Plugins": [
-    "html-report",
-    "inprogress"
-  ]
-}
+```bash
+gauge docs inprogress /absolute/path/to/specs
 ```
+
+The report file will be generated under `reports/inprogress.md`
+
+### :gear: Configuration
+
+You can also set/add the following configuration to your projects env file. `env/default/default.properties`
+
+- `IN_PROGRESS_TAGS` - This is a comma separated list of tags to use for analysing inprogress scenarios. Default is set to `wip,in-progress`
+- `IN_PROGRESS_CONSOLE_OUTPUT` - When set to true it should output the scenarios to console output.
+
+Examples:
+
+```properties
+IN_PROGRESS_CONSOLE_OUTPUT=true
+IN_PROGRESS_TAGS=wip,inprogress,my-in-progress-tag
+```
+
 
 ## Building locally
 
