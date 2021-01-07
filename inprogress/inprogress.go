@@ -252,6 +252,10 @@ type ScenarioWithReason struct {
 	Reason   string
 }
 
+func getScenarioMapKey(spec *gauge_messages.ProtoSpec, scenario *gauge_messages.ProtoScenario) string {
+	return fmt.Sprintf("%s_%s", spec.GetFileName(), scenario.GetScenarioHeading())
+}
+
 func GetInProgressScenariosWithReason(specs map[string]InProgressSpec) map[string]ScenarioWithReason {
 	inProgressScenarios := make(map[string]ScenarioWithReason, 0)
 	for _, spec := range specs {
@@ -259,14 +263,14 @@ func GetInProgressScenariosWithReason(specs map[string]InProgressSpec) map[strin
 			for _, specItem := range spec.GetSpec().GetItems() {
 				if specItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(specItem.GetComment().GetText()) {
 					for _, scenario := range spec.GetScenarios() {
-						key := scenario.GetScenarioHeading()
+						key := getScenarioMapKey(spec.GetSpec(), scenario)
 						inProgressScenarios[key] = ScenarioWithReason{scenario, specItem.GetComment().GetText()}
 					}
 				}
 			}
 		} else {
 			for _, scenario := range spec.GetScenarios() {
-				key := scenario.GetScenarioHeading()
+				key := getScenarioMapKey(spec.GetSpec(), scenario)
 				for _, scenItem := range scenario.GetScenarioItems() {
 					if scenItem.GetItemType() == gauge_messages.ProtoItem_Comment && containsInProgressPrefix(scenItem.GetComment().GetText()) {
 						inProgressScenarios[key] = ScenarioWithReason{scenario, scenItem.GetComment().GetText()}
@@ -301,7 +305,7 @@ func WriteToFile(inProgressSpecs map[string]InProgressSpec, inProgressScenariosW
 			if console {
 				logger.Infof(scenarioLine)
 			}
-			inProgressReason := inProgressScenariosWithReason[scenario.GetScenarioHeading()].Reason
+			inProgressReason := inProgressScenariosWithReason[getScenarioMapKey(spec.GetSpec(), scenario)].Reason
 			if len(strings.TrimSpace(inProgressReason)) > 0 {
 				reasonLine := fmt.Sprintf("    - %s", inProgressReason)
 				_, error = file.WriteString(reasonLine + "\n")
