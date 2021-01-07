@@ -39,6 +39,28 @@ gauge docs inprogress /absolute/path/to/specs
 
 The report file will be generated under `reports/inprogress.md`
 
+### `inprogress` comments
+
+When adding inprogress tags to specs, you can add a comment below the tags line starting with the inprogress tag.
+
+Example:
+
+```markdown
+# Customer sign-up
+
+* Go to active admin store
+
+## Customer Sign-up
+
+tags: wip
+
+// wip - reason for marking this as work in progress.
+
+* Sign up a new customer with name "Jann" email "jann.doe@example.com" and "password"
+* Check if the user "Jann" is logged in
+* See items available for purchase.
+```
+
 ### :gear: Configuration
 
 You can also set/add the following configuration to your projects env file. `env/default/default.properties`
@@ -52,7 +74,6 @@ Examples:
 IN_PROGRESS_CONSOLE_OUTPUT=true
 IN_PROGRESS_TAGS=wip,inprogress,my-in-progress-tag
 ```
-
 
 ## Building locally
 
