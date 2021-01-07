@@ -320,7 +320,7 @@ func WriteToFile(inProgressSpecs map[string]InProgressSpec, inProgressScenariosW
 }
 
 func containsInProgressPrefix(comment string) bool {
-	var inProgressRegex = regexp.MustCompile(`^in.?progress|//.*in.?progress`)
+	var inProgressRegex = regexp.MustCompile(`^in.?progress|//.?in.?progress|^wip|^//.?wip`)
 	return inProgressRegex.MatchString(strings.ToLower(strings.TrimSpace(comment)))
 }
 

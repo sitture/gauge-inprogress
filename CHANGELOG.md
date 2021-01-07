@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## v0.2.0
+
+### Updated
+
+- Also match comments starting with wip
+
 ## v0.1.1
 
 ### Fixed
