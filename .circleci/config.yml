@@ -2,8 +2,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.13
-    working_directory: /go/src/github.com/sitture/gauge-inprogress
+      - image: cimg/go:1.13
+    working_directory: ~/go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
@@ -17,8 +17,8 @@ jobs:
           command: go run build/make.go --all-platforms
   deploy:
     docker:
-      - image: circleci/golang:1.13
-    working_directory: /go/src/github.com/sitture/gauge-inprogress
+      - image: cimg/go:1.13
+    working_directory: ~/go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
