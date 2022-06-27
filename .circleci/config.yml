@@ -3,7 +3,6 @@ jobs:
   build:
     docker:
       - image: cimg/go:1.13
-    working_directory: /go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
@@ -18,7 +17,6 @@ jobs:
   deploy:
     docker:
       - image: cimg/go:1.13
-    working_directory: /go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
