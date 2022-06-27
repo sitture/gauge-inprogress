@@ -71,8 +71,8 @@ You can also set/add the following configuration to your projects env file. `env
 Examples:
 
 ```properties
-IN_PROGRESS_CONSOLE_OUTPUT=true
 IN_PROGRESS_TAGS=wip,inprogress,my-in-progress-tag
+IN_PROGRESS_CONSOLE_OUTPUT=true
 ```
 
 ## Building locally

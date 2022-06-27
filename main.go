@@ -18,7 +18,9 @@ const (
 )
 
 func main() {
-	os.Chdir(inprogress.GetProjectRoot())
+	if err := os.Chdir(inprogress.GetProjectRoot()); err != nil {
+		logger.Fatalf("failed to chdir to %s. %s", inprogress.GetProjectRoot(), err.Error())
+	}
 	address, err := net.ResolveTCPAddr("tcp", GaugeHost)
 	if err != nil {
 		logger.Fatalf("failed to start server. %s", err.Error())
