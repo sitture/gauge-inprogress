@@ -106,12 +106,11 @@ func mirrorDir(src, dst string) error {
 	return err
 }
 
-func runProcess(command string, workingDir string, arg ...string) {
+func runProcess(command string, arg ...string) {
 	cmd := exec.Command(command, arg...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = workingDir
-	log.Printf("Execute %v\n", cmd.Args)
+	fmt.Printf("Execute %v\n", cmd.Args)
 	err := cmd.Run()
 	if err != nil {
 		panic(err)
@@ -119,12 +118,18 @@ func runProcess(command string, workingDir string, arg ...string) {
 }
 
 func compileGoPackage() {
-	destDir := filepath.Join(bin, fmt.Sprintf("%s_%s", getGOOS(), getGOARCH()))
-	err := os.MkdirAll(destDir, newDirPermissions)
-	if err != nil {
-		panic(err)
+	runProcess("go", "build", "-o", getGaugeExecutablePath(inProgress))
+}
+
+func getGaugeExecutablePath(file string) string {
+	return filepath.Join(getBinDir(), getExecutableName(file))
+}
+
+func getExecutableName(file string) string {
+	if getGOOS() == "windows" {
+		return file + ".exe"
 	}
-	runProcess("go", ".", "build", "-o", destDir)
+	return file
 }
 
 // key will be the source file and value will be the target
