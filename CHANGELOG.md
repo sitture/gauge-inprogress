@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## v0.3.0
+
+### Updated
+
+- Removes darwin_x86 build, include darwin_arm64
+
 ## v0.2.0
 
 ### Updated
