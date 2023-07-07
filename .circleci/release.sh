@@ -10,7 +10,7 @@ go run build/make.go --all-platforms --distro
 
 cd deploy/
 for i in `ls`; do
-    ${GOPATH}/bin/github-release upload \
+    github-release upload \
         -u ${CIRCLE_PROJECT_USERNAME} \
         -r ${CIRCLE_PROJECT_REPONAME} \
         -t ${CIRCLE_TAG} \
