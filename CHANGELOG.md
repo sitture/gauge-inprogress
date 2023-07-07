@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## v0.4.0
+
+### Updated
+
+- Updates go version to 1.20
+
 ## v0.3.0
 
 ### Updated
