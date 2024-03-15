@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/sitture/gauge-inprogress/gauge_messages"
+	"os"
+
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/sitture/gauge-inprogress/inprogress"
 	"github.com/sitture/gauge-inprogress/logger"
 	"google.golang.org/grpc"
 )
 
 type handler struct {
+	gauge_messages.UnimplementedDocumenterServer
 	server *grpc.Server
 }
 
@@ -78,4 +81,5 @@ func (h *handler) Kill(c context.Context, m *gauge_messages.KillProcessRequest) 
 
 func (h *handler) stopServer() {
 	h.server.Stop()
+	os.Exit(0)
 }
