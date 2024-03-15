@@ -3,7 +3,7 @@ package inprogress
 import (
 	"fmt"
 	"github.com/getgauge/common"
-	"github.com/sitture/gauge-inprogress/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/sitture/gauge-inprogress/logger"
 	"os"
 	"path"

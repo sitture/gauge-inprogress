@@ -1,6 +1,6 @@
 {
   "id" : "inprogress",
-  "version" : "0.5.0",
+  "version" : "0.6.0",
   "name" : "In-progress",
   "description" : "Plugin for tracking in-progress specs/scenarios.",
   "install": {

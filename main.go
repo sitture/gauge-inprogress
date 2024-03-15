@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/sitture/gauge-inprogress/gauge_messages"
+	"net"
+	"os"
+
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/sitture/gauge-inprogress/inprogress"
 	"github.com/sitture/gauge-inprogress/logger"
 	"google.golang.org/grpc"
-	"net"
-	"os"
 )
 
 const (
