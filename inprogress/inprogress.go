@@ -297,20 +297,20 @@ func WriteToFile(inProgressSpecs map[string]InProgressSpec, inProgressScenariosW
 			filepath.Base(spec.GetSpec().GetFileName()))
 		_, error = file.WriteString(specLine + "\n")
 		if console {
-			logger.Infof(specLine)
+			logger.Info(specLine)
 		}
 		for _, scenario := range spec.GetScenarios() {
 			scenarioLine := fmt.Sprintf("  ## %s", scenario.GetScenarioHeading())
 			_, error = file.WriteString(scenarioLine + "\n")
 			if console {
-				logger.Infof(scenarioLine)
+				logger.Info(scenarioLine)
 			}
 			inProgressReason := inProgressScenariosWithReason[getScenarioMapKey(spec.GetSpec(), scenario)].Reason
 			if len(strings.TrimSpace(inProgressReason)) > 0 {
 				reasonLine := fmt.Sprintf("    - %s", inProgressReason)
 				_, error = file.WriteString(reasonLine + "\n")
 				if console {
-					logger.Infof(reasonLine)
+					logger.Info(reasonLine)
 				}
 			}
 		}

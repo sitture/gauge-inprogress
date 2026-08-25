@@ -1,14 +1,14 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/go:1.21
+      - image: cimg/go:1.26
     working_directory: ~/go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
-          name: Get all dependencies
-          command: go get ./...
+          name: Download dependencies
+          command: go mod download
       - run:
           name: Run Tests
           command: go test ./... -cover
@@ -17,18 +17,17 @@ jobs:
           command: go run build/make.go --all-platforms
   deploy:
     docker:
-      - image: cimg/go:1.21
+      - image: cimg/go:1.26
     working_directory: ~/go/src/github.com/sitture/gauge-inprogress
     steps:
       - checkout
       - run:
-          name: Get all dependencies
-          command: go get ./...
+          name: Download dependencies
+          command: go mod download
       - run:
           name: Install github-release
           command: |
-            go get -v -u github.com/github-release/github-release
-            go install github.com/github-release/github-release
+            go install github.com/github-release/github-release@latest
       - run:
           name: Build and Release
           command: .circleci/release.sh
